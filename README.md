@@ -1,5 +1,6 @@
 # RIS_Chat_Bot
  AI assistant for a RIS using Llama 2
+ 
  This repo contains all the required code without the Llama model or data
 
  model: https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/blob/main/llama-2-7b-chat.ggmlv3.q8_0.bin
