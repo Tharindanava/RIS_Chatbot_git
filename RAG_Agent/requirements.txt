@@ -1,5 +1,11 @@
-langchain==0.0.182
-beautifulsoup4==4.9.3
-requests==2.26.0
-chromadb==0.3.23
-tavily_search
+langchain
+langchain_community
+langchain_core
+langgraph
+beautifulsoup4
+requests
+chromadb
+requests
+typing_extensions
+tiktoken
+gpt4all

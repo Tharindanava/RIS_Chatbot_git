@@ -2,10 +2,18 @@ from langchain.prompts import PromptTemplate
 from langchain_community.chat_models import ChatOllama
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 
-def create_agents(retriever):
+def create_retrival_grader():
     local_llm = 'llama3'
     #LLM
-    llm = ChatOllama(model=local_llm, format="json", temparature = 0)
+    llm = ChatOllama(
+        model=local_llm, 
+        format="json", 
+        temperature=0,
+        model_kwargs={
+            'device': 'cuda',  # Use GPU if available
+            'max_new_tokens': 2048,
+            }
+        )
 
     # Retrieval grader agent
     retrival_grader = PromptTemplate(
@@ -23,6 +31,21 @@ def create_agents(retriever):
         input_variable=["question", "document"]
     ) | llm | JsonOutputParser()
 
+    return retrival_grader
+
+def create_rag_chain():
+    local_llm = 'llama3'
+    #LLM
+    llm = ChatOllama(
+        model=local_llm, 
+        format="json", 
+        temperature=0,
+        model_kwargs={
+            'device': 'cuda',  # Use GPU if available
+            'max_new_tokens': 2048,
+            }
+        )
+
     # RAG chain agent
     rag_chain = PromptTemplate(
         template = """<|begin_of_text|><|start_header_id|>system<|end_header_id|> You are an assistant for question-answering tasks.
@@ -35,6 +58,21 @@ def create_agents(retriever):
     """,
     input_variable=["question","document"]
     ) | llm | StrOutputParser()
+
+    return rag_chain
+
+def create_hallucination_grader():
+    local_llm = 'llama3'
+    #LLM
+    llm = ChatOllama(
+        model=local_llm, 
+        format="json", 
+        temperature=0,
+        model_kwargs={
+            'device': 'cuda',  # Use GPU if available
+            'max_new_tokens': 2048,
+            }
+        )
 
     # Hallucination grader agent
     hallucination_grader = PromptTemplate(
@@ -52,6 +90,21 @@ def create_agents(retriever):
     input_variable=["question","document"]
     ) | llm | JsonOutputParser()
 
+    return hallucination_grader
+
+def create_answer_grader():
+    local_llm = 'llama3'
+    #LLM
+    llm = ChatOllama(
+        model=local_llm, 
+        format="json", 
+        temperature=0,
+        model_kwargs={
+            'device': 'cuda',  # Use GPU if available
+            'max_new_tokens': 2048,
+            }
+        )
+
     # Answer grader agent
     answer_grader = PromptTemplate(
         template = """<|begin_of_text|><|start_header_id|>system<|end_header_id|> You are a grader assessing whether
@@ -68,8 +121,12 @@ def create_agents(retriever):
     input_variable=["question","document"]
     ) | llm | JsonOutputParser()
 
+    return answer_grader
+
+def create_web_search_tool():
+
     # Tavily web search tool
     from langchain_community.tools.tavily_search import TavilySearchResults
     web_search_tool = TavilySearchResults(k=3)
 
-    return retrival_grader, rag_chain, hallucination_grader, answer_grader, web_search_tool
+    return web_search_tool

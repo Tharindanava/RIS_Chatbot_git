@@ -1,5 +1,6 @@
 from langgraph.graph import StateGraph, END
 from typing_extensions import TypedDict
+from typing import List
 from methods import retrieve, grade_documents, generate, web_search, decide_to_generate, grade_generation_v_documents_and_question
 
 class GraphState(TypedDict):
@@ -15,7 +16,7 @@ class GraphState(TypedDict):
   question: str
   generation: str
   web_search: str
-  documents: list [str]
+  documents: List [str]
 
 def build_graph():
     workflow = StateGraph(GraphState)

@@ -1,6 +1,9 @@
 from langchain.schema import document
+from vectorstore import create_vectorstore
+from agents import create_retrival_grader,create_rag_chain,create_hallucination_grader,create_answer_grader,create_web_search_tool
 
-def retrieve(state, retriever):
+def retrieve(state):
+
   """
   Retrieve documents form vectorstore
 
@@ -11,6 +14,8 @@ def retrieve(state, retriever):
     state (dict): New key added to state, documents, that contains retrieved documents
 
   """
+  retriever = create_vectorstore()
+  
   print("---RETRIEVE---")
   question = state["question"]
 
@@ -18,7 +23,7 @@ def retrieve(state, retriever):
   documents = retriever.invoke(question)
   return {"documents": documents, "question": question}
 
-def grade_documents(state, retrival_grader):
+def grade_documents(state):
     """
     Determines whether the retrieved documents are relevent to the question
     If any document is not relevant, we will set a flag to run web search
@@ -30,6 +35,8 @@ def grade_documents(state, retrival_grader):
         state (dict): Filtered out irrelavent documents and update web_search state
 
     """
+    
+    retrival_grader = create_retrival_grader()
 
     print("---CHECK DOCUMENT RELEVANCE TO QUESTION---")
     question = state["question"]
@@ -54,7 +61,7 @@ def grade_documents(state, retrival_grader):
 
     return {"documents": filtered_docs, "question": question, "web_search": web_search}
 
-def generate(state, rag_chain):
+def generate(state):
     """
     Genarate answer using RAG on retrieved documents
 
@@ -65,6 +72,9 @@ def generate(state, rag_chain):
         state (dict): New key added to state, generation, that contains LLM generation
 
     """
+
+    rag_chain = create_rag_chain()
+
     print("---GENARATE---")
     question = state["question"]
     documents = state["documents"]
@@ -73,7 +83,7 @@ def generate(state, rag_chain):
     generation = rag_chain.invoke({"context":documents, "question":question})
     return {"documents": documents, "question":question, "generation": generation}
 
-def web_search(state, web_search_tool):
+def web_search(state):
     """
     Web search based on the grade of documents
 
@@ -85,6 +95,8 @@ def web_search(state, web_search_tool):
 
     """
 
+    web_search_tool = create_web_search_tool()
+
     print("---WEB SEARCH---")
     question = state["question"]
     documents = state["documents"]
@@ -92,7 +104,7 @@ def web_search(state, web_search_tool):
     #Web search
     docs = web_search_tool.invoke({"query": question})
     web_results = "\n".join([d["content"] for d in docs])
-    web_results = document(page_content=web_results)
+    web_results = Document(page_content=web_results)
     if documents is not None:
         documents.append(web_results)
     else:
@@ -127,7 +139,7 @@ def decide_to_generate(state):
     print("---DESION: GENERATE---")
     return "generate"
 
-def grade_generation_v_documents_and_question(state, hallucination_grader, answer_grader):
+def grade_generation_v_documents_and_question(state):
   """
   Determines whether or not the answer genarate is relevant to the question
 
@@ -138,6 +150,10 @@ def grade_generation_v_documents_and_question(state, hallucination_grader, answe
     str: Binary decision for next node to call
 
   """
+
+  hallucination_grader = create_hallucination_grader()
+  
+  answer_grader = create_answer_grader()
 
   print("---CHECK HALLUCINATION---")
   question = state["question"]
