@@ -1,4 +1,5 @@
 from langchain.schema import document
+from langchain_core.documents import Document
 from vectorstore import create_vectorstore
 from agents import create_retrival_grader,create_rag_chain,create_hallucination_grader,create_answer_grader,create_web_search_tool
 

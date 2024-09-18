@@ -1,9 +1,16 @@
-from langchain.vectorstores import Chroma
-from langchain.embeddings import GPT4AllEmbeddings
+import os
+from langchain_chroma import Chroma
+from langchain_community.embeddings import GPT4AllEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-import requests
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 from bs4 import BeautifulSoup
+import requests
+
+# Constants
+DATA_PATH = "data/"
+DB_PATH = "vectorstores/db_chroma"
+BATCH_SIZE = 5000  # Adjust this as per your system's capacity
 
 # Function to scrape the content of a given URL
 def scrape_content(url):
@@ -18,29 +25,62 @@ def scrape_content(url):
         print(f"Error fetching content from {url}: {e}")
         return None
 
-def create_vectorstore():
-    urls = [
+# Split a list into chunks of a given size
+def chunked(iterable, size):
+    for i in range(0, len(iterable), size):
+        yield iterable[i:i + size]
+
+
+# Single method to load documents from local files and URLs, and add them to vector DB
+def create_vectorstore(urls=None):
+    # Load documents from the local directory
+    loader = DirectoryLoader(DATA_PATH, glob="*.pdf", loader_cls=PyPDFLoader)
+    local_documents = loader.load()
+
+    # Scrape documents from URLs
+    url_documents = [
         "https://www.medscape.com/radiology",
         "https://pubmed.ncbi.nlm.nih.gov/",
         "https://radiopaedia.org/",
         "https://www.myesr.org/",
         "https://www.bmj.com/specialties/radiology"
     ]
-    
-    # Scrape documents
-    docs = [scrape_content(url) for url in urls if scrape_content(url) is not None]
 
-    # Split documents
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=250, chunk_overlap=0)
-    docs_list = text_splitter.split_documents(docs)
+    if urls:
+        url_documents = [scrape_content(url) for url in urls if scrape_content(url) is not None]
 
-    # Filter metadata
-    filtered_docs = [Document(page_content=doc.page_content, metadata=doc.metadata) for doc in docs_list]
+    # Combine local and URL documents
+    documents = local_documents + url_documents
 
-    # Create vector database
-    vectorstore = Chroma.from_documents(documents=filtered_docs, 
-                                        collection_name="rag-chroma", 
-                                        embedding=GPT4AllEmbeddings())
+    # Ensure all elements are Document objects
+    documents = [doc if isinstance(doc, Document) else Document(page_content=doc) for doc in documents]
+
+    # Split documents into chunks
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=250, chunk_overlap=25)
+    texts = text_splitter.split_documents(documents)
+
+    # Initialize GPT4AllEmbeddings with CUDA
+    embeddings = GPT4AllEmbeddings(model_kwargs={'device': 'cuda'})  # Enable CUDA for embeddings
+
+    # Check if Chroma DB already exists
+    if os.path.exists(DB_PATH):
+        print("Loading existing vector database...")
+        vectorstore = Chroma(persist_directory=DB_PATH, embedding_function=embeddings)  # Use embeddings directly
+    else:
+        print("Creating new vector database...")
+        # Create a new vector database if none exists
+
+        # Fix: Pass `embeddings` as a separate argument
+        vectorstore = Chroma.from_documents(documents=texts, collection_name="rag-chroma", persist_directory=DB_PATH, embedding_function=embeddings)
+
+    # Add documents in batches to avoid exceeding the maximum batch size
+    for batch in chunked(texts, BATCH_SIZE):
+        vectorstore.add_documents(batch)
+
+    # Persist changes (if necessary)
+    if not os.path.exists(DB_PATH):
+        vectorstore.persist()
+
     retriever = vectorstore.as_retriever()
 
     return retriever
