@@ -56,6 +56,7 @@ def build_graph():
         grade_generation_v_documents_and_question,
         {
             "not supported": "generate",
+            "invalid generation": "generate",
             "useful": END,
             "not useful": "websearch"
         }

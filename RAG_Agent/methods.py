@@ -177,6 +177,10 @@ def grade_generation_v_documents_and_question(state):
       print("---DECISION: generation DOSE NOT ADDRESS QUESTION---")
       return "not useful"
 
-  else:
+  elif grade == "no":
     print("---DECISION: generation IS NOT GROUNDED IN DOCUMENTS, RE-TRY---")
     return "not supported"
+
+  else:
+    print("---DECISION: invalid generation by HC, RE-TRY---")
+    return "invalid generation"

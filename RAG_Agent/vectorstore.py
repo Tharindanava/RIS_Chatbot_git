@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 import requests
 
 # Constants
-DATA_PATH = "data/"
-DB_PATH = "vectorstores/db_chroma"
+DATA_PATH = "/content/drive/MyDrive/RAG_Agent/data"
+DB_PATH = "/content/drive/MyDrive/RAG_Agent/vectorstores/db_chroma"
 BATCH_SIZE = 5000  # Adjust this as per your system's capacity
 
 # Function to scrape the content of a given URL
@@ -30,9 +30,18 @@ def chunked(iterable, size):
     for i in range(0, len(iterable), size):
         yield iterable[i:i + size]
 
-
 # Single method to load documents from local files and URLs, and add them to vector DB
 def create_vectorstore(urls=None):
+    # Check if Chroma DB already exists
+    if os.path.exists(DB_PATH):
+        print("Loading existing vector database...")
+        # Initialize GPT4AllEmbeddings with CUDA
+        embeddings = GPT4AllEmbeddings(model_kwargs={'device': 'cuda'})  # Enable CUDA for embeddings
+        vectorstore = Chroma(persist_directory=DB_PATH, embedding_function=embeddings)  # Load the existing vectorstore
+        return vectorstore.as_retriever()
+
+    print("Creating new vector database...")
+
     # Load documents from the local directory
     loader = DirectoryLoader(DATA_PATH, glob="*.pdf", loader_cls=PyPDFLoader)
     local_documents = loader.load()
@@ -62,25 +71,14 @@ def create_vectorstore(urls=None):
     # Initialize GPT4AllEmbeddings with CUDA
     embeddings = GPT4AllEmbeddings(model_kwargs={'device': 'cuda'})  # Enable CUDA for embeddings
 
-    # Check if Chroma DB already exists
-    if os.path.exists(DB_PATH):
-        print("Loading existing vector database...")
-        vectorstore = Chroma(persist_directory=DB_PATH, embedding_function=embeddings)  # Use embeddings directly
-    else:
-        print("Creating new vector database...")
-        # Create a new vector database if none exists
-
-        # Fix: Pass `embeddings` as a separate argument
-        vectorstore = Chroma.from_documents(documents=texts, collection_name="rag-chroma", persist_directory=DB_PATH, embedding_function=embeddings)
+    # Create a new vector database
+    vectorstore = Chroma.from_documents(documents=texts, collection_name="rag-chroma", persist_directory=DB_PATH, embedding_function=embeddings)
 
     # Add documents in batches to avoid exceeding the maximum batch size
     for batch in chunked(texts, BATCH_SIZE):
         vectorstore.add_documents(batch)
 
-    # Persist changes (if necessary)
-    if not os.path.exists(DB_PATH):
-        vectorstore.persist()
+    # Persist changes
+    vectorstore.persist()
 
-    retriever = vectorstore.as_retriever()
-
-    return retriever
+    return vectorstore.as_retriever()
