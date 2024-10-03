@@ -6,7 +6,7 @@ from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 
 def create_llm_json():
   
-    local_llm = '/content/drive/MyDrive/RAG_Agent/Models/Llama-3.1-Storm-8B-Q5_K_S.gguf'
+    local_llm = "C:/Users/acer/Documents/Accedemic_Folder_E19254/Training_02_TIEC_docs/RIS_project/RAG_Agent/model/Llama-3.1-Storm-8B-Q5_K_S.gguf"
 
     # Callbacks support token-wise streaming
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
@@ -15,7 +15,8 @@ def create_llm_json():
         model_path=local_llm,
         temperature=0,
         n_ctx=4096, 
-        n_gpu_layers=-1,
+        n_gpu_layers=12,
+        n_batch = 1024,
         callback_manager=callback_manager,
         verbose=True,  # Verbose is required to pass to the callback manager
         )

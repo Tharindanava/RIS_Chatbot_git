@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 import requests
 
 # Constants
-DATA_PATH = "/content/drive/MyDrive/RAG_Agent/data"
-DB_PATH = "/content/drive/MyDrive/RAG_Agent/vectorstores/db_chroma"
+DATA_PATH = "C:/Users/acer/Documents/Accedemic_Folder_E19254/Training_02_TIEC_docs/RIS_project/RAG_Agent/data/"#"data/"
+DB_PATH = "C:/Users/acer/Documents/Accedemic_Folder_E19254/Training_02_TIEC_docs/RIS_project/RAG_Agent/vectorstores/db_chroma"#"vectorstores/db_chroma"
 BATCH_SIZE = 5000  # Adjust this as per your system's capacity
 
 # Function to scrape the content of a given URL

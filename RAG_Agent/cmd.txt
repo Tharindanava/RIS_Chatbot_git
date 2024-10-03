@@ -1,0 +1,1 @@
+pip install -r C:\Users\acer\Documents\Accedemic_Folder_E19254\Training_02_TIEC_docs\RIS_project\RAG_Agent\requirements.txt
