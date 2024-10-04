@@ -10,6 +10,7 @@ import requests
 # Constants
 DATA_PATH = "C:/Users/acer/Documents/Accedemic_Folder_E19254/Training_02_TIEC_docs/RIS_project/RAG_Agent/data/"#"data/"
 DB_PATH = "C:/Users/acer/Documents/Accedemic_Folder_E19254/Training_02_TIEC_docs/RIS_project/RAG_Agent/vectorstores/db_chroma"#"vectorstores/db_chroma"
+URLS_FILE = "C:/Users/acer/Documents/Accedemic_Folder_E19254/Training_02_TIEC_docs/RIS_project/RAG_Agent/urls.txt"
 BATCH_SIZE = 5000  # Adjust this as per your system's capacity
 
 # Function to scrape the content of a given URL
@@ -30,6 +31,19 @@ def chunked(iterable, size):
     for i in range(0, len(iterable), size):
         yield iterable[i:i + size]
 
+# Function to load URLs from the text file
+def load_urls():
+    if os.path.exists(URLS_FILE):
+        with open(URLS_FILE, "r") as f:
+            return [line.strip() for line in f.readlines() if line.strip()]
+    return []
+
+# Function to save URLs to the text file
+def save_urls(urls):
+    with open(URLS_FILE, "w") as f:
+        for url in urls:
+            f.write(url + "\n")
+
 # Single method to load documents from local files and URLs, and add them to vector DB
 def create_vectorstore(urls=None):
     # Check if Chroma DB already exists
@@ -46,14 +60,8 @@ def create_vectorstore(urls=None):
     loader = DirectoryLoader(DATA_PATH, glob="*.pdf", loader_cls=PyPDFLoader)
     local_documents = loader.load()
 
-    # Scrape documents from URLs
-    url_documents = [
-        "https://www.medscape.com/radiology",
-        "https://pubmed.ncbi.nlm.nih.gov/",
-        "https://radiopaedia.org/",
-        "https://www.myesr.org/",
-        "https://www.bmj.com/specialties/radiology"
-    ]
+    # Load URLs from the text file
+    url_documents = load_urls()
 
     if urls:
         url_documents = [scrape_content(url) for url in urls if scrape_content(url) is not None]

@@ -51,16 +51,17 @@ def build_graph():
         }
     )
     workflow.add_edge("websearch", "generate")
-    workflow.add_conditional_edges(
-        "generate",
-        grade_generation_v_documents_and_question,
-        {
-            "not supported": "generate",
-            "invalid generation": "generate",
-            "useful": END,
-            "not useful": "websearch"
-        }
-    )
+    workflow.add_edge("generate", END) # comment for actual RAG agent
+    # workflow.add_conditional_edges(
+    #     "generate",
+    #     grade_generation_v_documents_and_question,
+    #     {
+    #         "not supported": "generate",
+    #         "invalid generation": "generate",
+    #         "useful": END,
+    #         "not useful": "websearch"
+    #     }
+    # )
 
     return workflow.compile()
 

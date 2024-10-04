@@ -21,18 +21,6 @@ def create_llm_json():
         verbose=True,  # Verbose is required to pass to the callback manager
         )
 
-    # local_llm = 'llama3'
-    # #LLM
-    # llm = ChatOllama(
-    #     model=local_llm, 
-    #     format="json", 
-    #     temperature=0,
-    #     model_kwargs={
-    #         'device': 'cuda',  # Use GPU if available
-    #         'max_new_tokens': 2048,
-    #         }
-    #     )
-
     return llm
 
 def create_retrival_grader():
